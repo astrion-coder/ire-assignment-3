@@ -121,3 +121,12 @@ Measurement choices and optimisations, written down **before** they are applied 
   - For the full run, close the browser and other busy applications.
   - The protocol is unchanged: median of 3, as the assignment asks.
   - Q5 candidate: one-at-a-time QPS on a shared desktop depends on what else is running, even with pinning.
+
+## 2026-10-24: report assets (`05_report_assets.ipynb`), fixed before it first runs
+- **Every figure and table is rebuilt from `results.csv` alone** by `report_assets()` in `00_core`: the same functions the part notebooks call. `bash run_all.sh --only 05` redraws everything without repeating a benchmark.
+- **The machine table** lists every distinct value of each machine field across all rows. One value per field shows that one machine ran everything; a test fails if the rows name more than one CPU. From now on, rows also record the h5py, pandas and matplotlib versions and the BLAS libraries loaded in the process (FAISS bundles its own OpenBLAS; numpy has another), since BLAS mattered for the d = 100 finding.
+- **The timing-steadiness table (Q5)** reports:
+  - the spread between the 3 timed passes of every one-at-a-time setting, defined as (slowest − fastest) / fastest, as a median, a 90th percentile and the share above 10%
+  - the 1-minute load average while rows were measured (median and maximum)
+  - the ratio of the two independent exact-search measurements on SIFT at the same N (Part 3 over Part 1)
+- **Follow-up to the d = 100 finding (Part 1).** The BLAS field now in every row shows two OpenBLAS libraries in the process. numpy's is OpenBLAS 0.3.34 using its Haswell (AVX2) kernels. FAISS's bundled one is OpenBLAS 0.3.15 using its Prescott kernels: a generic SSE3 build, presumably chosen so the wheel runs on any x86-64 CPU. Batched exact search runs its matrix product through FAISS's library. That fits both observations: numpy's d = 100 product was fast, and FAISS's batched search at d = 100 was slow. It's an inference: we haven't swapped the library to prove it. Check with `cat report/tables/machine.md` (BLAS row) and the dimension-check rows in `report/tables/part1_timing.md`. Q5 candidate: batched exact-search speed depends on which BLAS build the FAISS wheel ships, not only on the hardware.
