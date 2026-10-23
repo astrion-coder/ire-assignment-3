@@ -44,3 +44,15 @@ Measurement choices and optimisations, written down **before** they are applied 
 - **Part 1's multi-threaded batch timing is not pinned.** It uses 12 FAISS/BLAS threads. Pinning the main thread does not move OpenMP worker threads that already exist, so those threads may run on E-cores. The thread count is recorded.
 - **Ground-truth caches are keyed by a fingerprint of the data** (shape plus a sample of rows), so a changed subset or noise level can never reuse a stale file.
 - **Defaults:** k-means seeds are set explicitly (`cp.seed` and, for IVF-PQ, `pq.cp.seed` = 42). FAISS HNSW's level generator uses FAISS's fixed internal seed. Multi-threaded HNSW insertion is still not bit-for-bit reproducible.
+
+## 2026-10-23: Part 1 (`01_exact_baseline.ipynb`), choices fixed before it first runs
+- **The agreement check always uses the full base set.** It compares our exact neighbours with the stored ones, and the stored neighbours are only valid for the full set. Full mode checks all 10,000 queries; quick mode checks the first 1,000 (0–999, tuning half; nothing is tuned from them).
+- **Distance units.** FAISS returns squared L2. Before comparing distances, they are converted to the units the files are believed to store: plain L2 for SIFT, and 1 − cos for GloVe, which on unit vectors equals squared L2 ÷ 2. The notebook reports the largest difference, so this belief is checked, not assumed.
+- **Timing sets.** One query at a time uses queries 5,000–5,999 (see the optimisation above). One batch uses all reporting-half queries, timed twice: pinned to one thread, and with 12 unpinned threads. QPS is compared per query, so the different set sizes don't matter.
+- **Finding from the first quick run, and a check added because of it.** FAISS's single-thread batch search was no faster than one query at a time on GloVe (1.0×), while SIFT gained 2.9×. A scratch diagnostic (100K vectors, 1,000 queries) showed the cause is the dimension, not the data:
+  - SIFT cut to 100 dims was as slow as GloVe (1.29 vs 1.30 ms per query).
+  - GloVe zero-padded to 128 dims was as fast as SIFT (0.64 ms).
+  - Shuffling the order of the base vectors, or scaling them, changed nothing.
+  - numpy's own BLAS computes the d = 100 matrix product quickly, so the slow path is probably in the BLAS bundled with faiss-cpu.
+
+  Part 1 now also times the single-thread batch with SIFT cut to its first 100 dims and GloVe zero-padded to 128 (`variant` column). The report can then cite this from `results.csv`. The padded and truncated copies are used for this timing only, never for recall. This is a Q5 candidate: batched exact-search speed depends on a library kernel's handling of the dimension, not just on N × d.
