@@ -1,0 +1,18 @@
+[project]
+name = "ann-benchmark-a3"
+version = "0.1.0"
+description = "CS4.406 Assignment 3: benchmarking approximate nearest neighbour search"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy",
+    "faiss-cpu",
+    "h5py",
+    "pandas",
+    "matplotlib",
+    "threadpoolctl",
+    "ipykernel",
+    "nbconvert",
+    "ipytest",
+    "pytest",
+]

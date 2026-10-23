@@ -1,0 +1,24 @@
+# .git ships with the submission: datasets, caches and index files must never be committed
+data/
+cache/
+*.hdf5
+*.h5
+*.index
+*.faiss
+*.npy
+*.npz
+
+# Quick-mode output and the packaged zip
+results_quick/
+dist/
+
+# Added to the zip's top level at packaging time, not part of code/
+ai_log/
+report.pdf
+
+# Python / Jupyter
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+PLAN.md
