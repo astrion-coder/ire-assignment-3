@@ -1,14 +1,9 @@
 # Hypotheses
 
-Each hypothesis was written before its experiment and committed to git before any of that experiment's results existed. Once an experiment has run, its hypothesis is not edited; later thoughts go in a dated note underneath.
-
-<!-- Replace each _TODO_ with a short hypothesis: what you expect, and why. The Part 3 and Part 4 notebooks
-     won't run until this file is committed with no _TODO_ left in that part's section. -->
-
 ## Part 3: Scaling (SIFT at 100K, 300K and 1M vectors)
 
-_TODO_
+For exact search, every query is compared with every vector. This will cause the time taken to answer a query to increase proportional to N. For IVF-Flat, the increase should be slower, roughly $\sqrt{N}$, since the nlist for the IVF-Flat grows proportional to $\sqrt{N}$, so each list holds a number of vectors proportional to $\sqrt{N}$ and a query that scans a fixed number of lists reads a number of vectors proportional to $\sqrt{N}$, assuming the number of lists it needs to scan stays about the same as N grows. HNSW will have the slowest increase because the neighbour links in its upper layers will let the search jump close to the target in a few long hops, so the number of hops grows roughly like $\log N$ rather than like N.
 
 ## Part 4: Hard geometry (seeded Gaussian noise added to SIFT)
 
-_TODO_
+Let $\sigma$ be the standard deviation of the Gaussian noise, relative to the spread of the data. As it grows, it adds about the same amount to every distance on average, so a query's nearest neighbour becomes barely closer than a typical vector and the true neighbours become harder for an index to tell apart from the rest. IVF-Flat should break to the highest extent because its cells come from k-means on the clusters in the data and the noise will blur those clusters, so a query's true neighbours stop falling in the same few cells as the query and many more cells have to be probed. HNSW should also break, because the noise affects the neighbour links as well, and a neighbour's neighbours are less likely to be close to the query. But it should break slower, because each step of its search compares the query with actual nearby vectors, while IVF-Flat picks cells using only coarse centroids, which lose their ability to tell regions apart faster as every vector starts to look equally far away.
