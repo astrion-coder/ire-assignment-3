@@ -79,3 +79,21 @@ Measurement choices and optimisations, written down **before** they are applied 
   - nprobe: 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256. Quick mode stops at 128 (nlist 256).
 
   This was seen on tune-half recall, so no reporting query informed it. The extra settings are mostly cheap low values; the largest settings dominate sweep time.
+
+## 2026-10-23: distance counts (all parts), fixed before they first run
+- **Every timed row records `distances_per_query`, at no cost to the timing.** FAISS always updates global counters during search, whether or not anyone reads them. `time_one_at_a_time` resets them after the warm-up and reads them after the timed passes, so no work enters the timed loop. What is counted:
+  - **HNSW:** FAISS's own count (`hnsw_stats.ndis`), every distance its search computes on all levels.
+  - **IVF:** the list entries scanned (`indexIVF_stats.ndis`) plus nlist for the coarse quantiser, which FAISS doesn't count there. For IVF-PQ an entry is a table-lookup distance, much cheaper than a full one, so its counts aren't comparable with the others' in cost.
+  - **Exact search:** N.
+- These counts explain QPS by mechanism. For example, Part 3 can show whether a query's work grows like N, √N or log N.
+
+## 2026-10-23: Part 3 (`03_scaling.ipynb`), choices fixed before it first runs
+- **Sizes are prefixes of the SIFT base set:** the first 100K, 300K and 1M vectors (quick mode: 10K, 30K, 100K). The queries are the same at every size; ground truth is recomputed for each size.
+- **HNSW** uses M 16 and efConstruction 200 at every size.
+- **IVF-Flat uses nlist = round(4√N):** 1,265, 2,191 and 4,000 (quick mode: 400, 693, 1,265). This makes the average list size (N / nlist = √N / 4) grow exactly like √N, which the hypothesis assumes. Powers of two (1024, 2048, 4096) would only grow it roughly like √N. At 10K vectors, FAISS warns that it has fewer than 39 training points per centroid; that affects quick mode only.
+- **Exact search** is timed one query at a time on queries 5,000–5,999, as in Part 1.
+- **Same grids, sweep stop and selection rule as Part 2.** The cost of recall 0.95 at each size is the report-half latency (1000 / QPS) of the fastest setting whose tune-half recall reaches 0.95, along with that index's build time and bytes per vector.
+- **Growth rates** are the slope of a least-squares line through log(latency) against log(N) over the three sizes. The same is done for distance counts. Predicted slopes: 1 for exact search, 0.5 for IVF-Flat if the nprobe needed stays the same, close to 0 for HNSW.
+- **Q4 inputs come from the same fit.** Latency at 150K is interpolated; latency at 10M is extrapolated, 10× beyond the largest size measured, and is labelled as an extrapolation. Memory at 10M is bytes per vector at the largest size × 10M.
+- **Exact search at 1M is measured twice:** in Part 1 and again here, in separate processes. The gap between the two is one estimate of run-to-run timing noise (Q5).
+- **Finding from the first quick run: a cache effect.** At 10K, 30K and 100K vectors, exact search's distance count grew exactly like N (slope 1.00), but its latency grew faster (slope 1.32). Almost all the excess came between 30K and 100K: 3.3× more vectors took 7.6× longer. The L3 cache is 24 MiB. 30K SIFT vectors (15 MB) fit in it and 100K (51 MB) don't, so the smaller sizes were probably served from cache and 100K from RAM. This is consistent with a cache effect but doesn't prove one. The full-mode sizes (51, 154 and 512 MB) are all beyond L3, so the full run's slopes measure the RAM-bound regime only. Q5 candidate: a benchmark on data small enough to fit in cache flatters search speed. Check with `lscpu | grep L3`.
