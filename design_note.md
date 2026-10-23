@@ -97,3 +97,27 @@ Measurement choices and optimisations, written down **before** they are applied 
 - **Q4 inputs come from the same fit.** Latency at 150K is interpolated; latency at 10M is extrapolated, 10× beyond the largest size measured, and is labelled as an extrapolation. Memory at 10M is bytes per vector at the largest size × 10M.
 - **Exact search at 1M is measured twice:** in Part 1 and again here, in separate processes. The gap between the two is one estimate of run-to-run timing noise (Q5).
 - **Finding from the first quick run: a cache effect.** At 10K, 30K and 100K vectors, exact search's distance count grew exactly like N (slope 1.00), but its latency grew faster (slope 1.32). Almost all the excess came between 30K and 100K: 3.3× more vectors took 7.6× longer. The L3 cache is 24 MiB. 30K SIFT vectors (15 MB) fit in it and 100K (51 MB) don't, so the smaller sizes were probably served from cache and 100K from RAM. This is consistent with a cache effect but doesn't prove one. The full-mode sizes (51, 154 and 512 MB) are all beyond L3, so the full run's slopes measure the RAM-bound regime only. Q5 candidate: a benchmark on data small enough to fit in cache flatters search speed. Check with `lscpu | grep L3`.
+
+## 2026-10-23: Part 4 (`04_hard_geometry.ipynb`), choices fixed before it first runs
+- **Data.** The first 150,000 SIFT base vectors (quick mode: 50,000) and all 10,000 queries. Setting σ adds σ · s · ε to every vector:
+  - s is the mean per-coordinate standard deviation of the clean base set.
+  - ε ~ N(0, I) comes from `numpy.random.default_rng(42)`; the base noise is drawn first, then the query noise, so the two are independent.
+  - The same ε is used at every σ, so the only thing that changes between settings is σ.
+- **Size: 150K, not the 200K in the plan.** The assignment allows "at most 500K synthetic vectors". Counting strictly, that's every generated vector across the three noisy settings, queries included. That gives 3 × (150K + 10K) = 480K, which is within the limit; 200K would have made 630K. σ = 0 is the unchanged real data.
+- **Settings:** σ ∈ {0 (control), 0.1, 0.3, 1.0}.
+- **Ground truth is recomputed at each σ on the noisy data.** Recall therefore measures how well an index finds the true neighbours *of the noisy data*. It isn't a denoising test.
+- **Relative contrast** measures how hard the geometry is. Per query, it's the mean L2 distance to 1,000 base vectors (sampled with seed 42) divided by the L2 distance to the true nearest neighbour. We report the median over report-half queries, and every Part 4 row stores it.
+- **Indexes:** HNSW (M 16, efConstruction 200) and IVF-Flat (nlist 1024; quick mode 256), rebuilt from scratch at each σ, so IVF's k-means is retrained on that σ's data. This measures the geometry, not drift. Exact search is timed at each σ as a control: N and d don't change, so its time shouldn't either.
+- **Longer sweeps than Part 2:** efSearch goes up to 2048, and nprobe up to nlist (every list). IVF-Flat can therefore always reach 0.95 in the worst case, by scanning everything, and HNSW gets a long sweep before it's declared "not reached".
+- **Two measures of breaking:**
+  1. **Recall at fixed effort.** Each index's 0.95 setting, chosen on the control's tune half, is applied at every σ.
+  2. **Cost of getting back to 0.95.** The QPS and distance computations at each σ's own operating point.
+
+## 2026-10-23: background load, found in the second quick run of Part 4
+- **What happened.** Recall was identical across two quick runs, as it must be, but QPS at σ = 0 fell by up to 40% in the second. The raw passes for exact search were 0.975, 0.864 and 0.723 s, against a steady ~0.67 s later in the same run. Two of the three passes were slow, so the median couldn't absorb it.
+- **Cause.** Firefox was using about 80% of a core at the time. CPU 2, which the timing thread is pinned to, shares a physical core with CPU 3. Whenever other work runs on either one, a single-threaded timing slows down. Pinning stops our thread from migrating; it doesn't keep other processes off the core.
+- **Response.**
+  - Every row now records `load_avg_1m` (`os.getloadavg()[0]` when its header is made). The full run can then show whether the machine was idle, and rows measured under load can be found.
+  - For the full run, close the browser and other busy applications.
+  - The protocol is unchanged: median of 3, as the assignment asks.
+  - Q5 candidate: one-at-a-time QPS on a shared desktop depends on what else is running, even with pinning.
