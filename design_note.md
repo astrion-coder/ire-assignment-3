@@ -56,3 +56,26 @@ Measurement choices and optimisations, written down **before** they are applied 
   - numpy's own BLAS computes the d = 100 matrix product quickly, so the slow path is probably in the BLAS bundled with faiss-cpu.
 
   Part 1 now also times the single-thread batch with SIFT cut to its first 100 dims and GloVe zero-padded to 128 (`variant` column). The report can then cite this from `results.csv`. The padded and truncated copies are used for this timing only, never for recall. This is a Q5 candidate: batched exact-search speed depends on a library kernel's handling of the dimension, not just on N × d.
+
+## 2026-10-23: Part 2 (`02_benchmark.ipynb`), choices fixed before it first runs
+- **Grids.** Full mode:
+  - HNSW: M ∈ {8, 16, 32}, efConstruction 200, efSearch from 10 up (the exact grid is in the "Finer search grids" entry below).
+  - IVF-Flat: nlist ∈ {1024, 4096}.
+  - IVF-PQ: nlist 4096, m ∈ {16, 32, 64} for SIFT and {20, 50} for GloVe, 8 bits per sub-vector (FAISS's default), so m bytes of code per vector.
+  - Both IVF indexes sweep nprobe from 1 to 256, skipping values above nlist.
+
+  Quick mode builds one setting per index, on the first 100,000 vectors.
+- **Best trade-off curve.** Each index's curve is the Pareto front over all its build settings and search values, chosen on the tune half. It's plotted at the report-half recall and QPS of those same configurations, so a point can sit slightly off a monotone curve.
+- **Operating points at 0.90 and 0.95.** The fastest configuration of that index whose tune-half recall reaches the target. Its report-half recall and QPS are reported even if the recall lands just under the target. If no configuration reaches the target on the tune half, the QPS table says so. The cost table then shows the configuration with the highest tune-half recall and marks it.
+- **The exact baseline is Part 1's one-at-a-time row.** Same protocol, queries 5,000–5,999, not re-measured in Part 2. The plotting code asserts that Part 1 and Part 2 timed the same base set.
+- **Index size is what FAISS serialises:** vectors or PQ codes, ids (8 bytes per vector in IVF lists), centroids, PQ codebooks, HNSW links.
+- **IVF-PQ needs more RAM than its serialised size.** FAISS's default for residual PQ with L2 keeps a precomputed distance table of nlist × m × 256 float32, which speeds up search. FAISS rebuilds it on load instead of storing it, so it's recorded separately as `search_table_bytes`. At nlist 4096 and m 64 that's about 268 MB, against 64 MB of codes. Q2 candidate: PQ saves less memory in RAM than on disk.
+- **IVF k-means trains on the base vectors themselves**, since the files have no separate training set. FAISS's default samples at most 256 points per centroid, with a fixed seed: nlist 1024 trains on 262,144 vectors, nlist 4096 on all of them. Training is part of build time.
+- **IVF-PQ runs without re-ranking**, so quantisation error caps its recall. Re-ranking is Part 3's Compression option, which we didn't choose.
+- **The coarse quantiser is inside the timed call.** Each IVF query first finds its nprobe nearest centroids by a flat scan, and that scan is timed with the rest.
+- **Figures and tables are drawn from `results.csv` alone**, by functions in `00_core.ipynb`. `05_report_assets.ipynb` calls the same functions, so a figure can be redrawn without re-running any benchmark.
+- **Finer search grids, changed after the first quick run.** The first grids doubled efSearch and nprobe at each step. That's too coarse for operating points: on quick-mode SIFT, HNSW's tune-half recall jumped from 0.88 (efSearch 16) to 0.96 (efSearch 32), so 0.90 and 0.95 got the same setting, and QPS at 0.90 was understated by the size of the overshoot. Grids now step by about 1.33–1.5×:
+  - efSearch: 10, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768. Quick mode stops at 512, so GloVe's HNSW sweep still clears 0.95 when the multi-threaded build comes out slightly worse.
+  - nprobe: 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256. Quick mode stops at 128 (nlist 256).
+
+  This was seen on tune-half recall, so no reporting query informed it. The extra settings are mostly cheap low values; the largest settings dominate sweep time.
