@@ -37,3 +37,10 @@ Measurement choices and optimisations, written down **before** they are applied 
 ### Optimisations (cost savings; none changes how a query is timed)
 - **Exact search, timed one query at a time, uses queries 5,000–5,999 in full mode, not all 5,000 reporting queries.** Exact recall is 1 by construction, so only the timing matters, and a 1M-vector scan per query is the slowest thing we time.
 - **A sweep stops at the first search setting whose tuning-half recall reaches 0.995.** Larger settings only cost time and cannot change any operating point at 0.90 or 0.95.
+
+## 2026-10-23: core notebook (`00_core.ipynb`), choices fixed before it first runs
+- **The timed loop writes ids as it goes.** Inside the loop, each query's ids are written into a preallocated array (FAISS `search(..., D=, I=)`), and those ids are what recall is computed from. The loop does the same work for every index, so the overhead is equal across indexes. Taking ids from the timed calls themselves also avoids a subtle mismatch: a separate batched search could rank near-tied IVF centroids differently from single-query calls.
+- **Warm-up queries are the first 200 of the set being measured.** They run untimed before the timed passes, and the same queries are timed again later. Exact search scans everything anyway; for the indexes, warming 200 of 5,000 queries is a small effect, the same for all of them.
+- **Part 1's multi-threaded batch timing is not pinned.** It uses 12 FAISS/BLAS threads. Pinning the main thread does not move OpenMP worker threads that already exist, so those threads may run on E-cores. The thread count is recorded.
+- **Ground-truth caches are keyed by a fingerprint of the data** (shape plus a sample of rows), so a changed subset or noise level can never reuse a stale file.
+- **Defaults:** k-means seeds are set explicitly (`cp.seed` and, for IVF-PQ, `pq.cp.seed` = 42). FAISS HNSW's level generator uses FAISS's fixed internal seed. Multi-threaded HNSW insertion is still not bit-for-bit reproducible.
