@@ -68,7 +68,7 @@ Every number in the report comes from a table generated from `results/results.cs
 | The two data files total about 1 GB | `du -ch data/*.hdf5` |
 | Every figure and table is regenerated from `results.csv` alone | `bash run_all.sh --only 05` |
 | Our exact neighbours agree with the stored ones (Part 1) | `cat report/tables/part1_agreement.md` |
-| One batch is faster than one query at a time, and how much depends on the dimension (Part 1) | `cat report/tables/part1_timing.md` |
+| One batch is faster than one query at a time (Part 1) | `cat report/tables/part1_timing.md` |
 | FAISS's bundled BLAS is a generic SSE3 (Prescott) build; numpy's uses AVX2 (Haswell) kernels | `cat report/tables/machine.md` |
 | QPS of each index at recall 0.90 and 0.95 (Part 2) | `cat report/tables/part2_qps_at_recall.md` |
 | Build time, size and bytes per vector at recall 0.95, and the RAM IVF-PQ keeps beside its serialised size (Part 2) | `cat report/tables/part2_cost_at_095.md` |
@@ -76,7 +76,7 @@ Every number in the report comes from a table generated from `results/results.cs
 | How the cost of recall 0.95 grows with N; latency at 150K and 10M from the fit (Part 3, Q4) | `cat report/tables/part3_scaling.md report/tables/part3_growth.md` |
 | The L3 cache is 24 MiB, so 30K SIFT vectors (15 MB) fit in it and 100K (51 MB) don't | `lscpu \| grep L3` |
 | What noise does to relative contrast, recall and speed (Part 4) | `cat report/tables/part4_noise.md` |
-| How steady the timings were, and the load while measuring (Q5) | `cat report/tables/run_quality.md` |
+| How steady the timings were (Q5) | `cat report/tables/run_quality.md` |
 | One machine ran everything, and which library versions | `cat report/tables/machine.md` |
 | The CPU has 6 two-thread performance cores (CPUs 0–11) and 8 efficiency cores (CPUs 12–19) | `cat /sys/devices/cpu_core/cpus /sys/devices/cpu_atom/cpus` |
 | Each hypothesis was committed before its results | `git log --date=iso --format='%h %ad %s' -- hypothesis.md results/` |

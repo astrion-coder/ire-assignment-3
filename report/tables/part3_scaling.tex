@@ -1,0 +1,15 @@
+\begin{tabular}{rllrrrrrr}
+\toprule
+N & Method & Setting for 0.95 & Recall & QPS & ms/query & Distances/query & Build (s) & Bytes/vector \\
+\midrule
+100,000 & Exact search & full scan & 1.000 & 550 & 1.819 & 100,000 & 0.0 & 512 \\
+100,000 & IVF-Flat & nlist=1265, nprobe=32 & 0.958 & 12,446 & 0.080 & 4,103 & 1.5 & 527 \\
+100,000 & HNSW & M=16, efSearch=32 & 0.958 & 26,290 & 0.038 & 604 & 2.4 & 656 \\
+300,000 & Exact search & full scan & 1.000 & 166 & 6.015 & 300,000 & 0.0 & 512 \\
+300,000 & IVF-Flat & nlist=2191, nprobe=48 & 0.970 & 4,863 & 0.206 & 9,416 & 7.5 & 524 \\
+300,000 & HNSW & M=16, efSearch=48 & 0.966 & 14,785 & 0.068 & 895 & 11.5 & 656 \\
+1,000,000 & Exact search & full scan & 1.000 & 48.9 & 20.443 & 1,000,000 & 0.1 & 512 \\
+1,000,000 & IVF-Flat & nlist=4000, nprobe=48 & 0.962 & 2,678 & 0.373 & 17,246 & 48.1 & 522 \\
+1,000,000 & HNSW & M=16, efSearch=64 & 0.971 & 9,995 & 0.100 & 1,245 & 51.8 & 656 \\
+\bottomrule
+\end{tabular}

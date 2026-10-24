@@ -1,0 +1,10 @@
+| Dataset | Vectors | d | Dimension check | Method | Threads | QPS | ms/query | Speed-up |
+|---|---|---|---|---|---|---|---|---|
+| SIFT | 1,000,000 | 128 |  | one query at a time | 1 | 48.6 | 20.573 | 1.0x |
+| SIFT | 1,000,000 | 128 |  | one batch | 1 | 155 | 6.432 | 3.2x |
+| SIFT | 1,000,000 | 128 |  | one batch | 12 | 859 | 1.164 | 17.7x |
+| SIFT | 1,000,000 | 100 | first 100 dims | one batch | 1 | 178 | 5.626 | 3.7x |
+| GloVe-100 | 1,183,514 | 100 |  | one query at a time | 1 | 53.3 | 18.749 | 1.0x |
+| GloVe-100 | 1,183,514 | 100 |  | one batch | 1 | 164 | 6.102 | 3.1x |
+| GloVe-100 | 1,183,514 | 100 |  | one batch | 12 | 764 | 1.309 | 14.3x |
+| GloVe-100 | 1,183,514 | 128 | zero-padded to 128 | one batch | 1 | 132 | 7.560 | 2.5x |
