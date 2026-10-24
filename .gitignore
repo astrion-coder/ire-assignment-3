@@ -30,3 +30,8 @@ PLAN.md
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+
+# Agent Skills
+.agents/
+.claude/
+skills-lock.json
