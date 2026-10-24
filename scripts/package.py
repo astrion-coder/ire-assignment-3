@@ -1,6 +1,6 @@
 """Builds the submission zip, dist/<ROLL>_A3.zip, holding exactly:
 
-    report.pdf    the report
+    report.pdf    the report, compiled to report/report.pdf
     code/         a clone of this repository at HEAD, .git included
     results/      results.csv and figures/ from the full run
     ai_log/       prompts, responses and ai_statement.md
@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TOP_LEVEL = ["report.pdf", "code", "results", "ai_log"]
-REQUIRED = ["report.pdf", "results/results.csv", "ai_log/ai_statement.md"]
+REQUIRED = ["report/report.pdf", "results/results.csv", "ai_log/ai_statement.md"]
 FORBIDDEN_SUFFIXES = {".hdf5", ".h5", ".npy", ".npz", ".index", ".faiss"}
 FORBIDDEN_DIRS = {"data", "cache", "results_quick", "dist", ".venv"}
 
@@ -61,7 +61,7 @@ def stage(root, staging):
     git("remote", "remove", "origin", cwd=staging / "code")
     shutil.copytree(root / "results", staging / "results")
     shutil.copytree(root / "ai_log", staging / "ai_log")
-    shutil.copy2(root / "report.pdf", staging / "report.pdf")
+    shutil.copy2(root / "report" / "report.pdf", staging / "report.pdf")
     bad = forbidden(staging)
     if bad:
         raise SystemExit("Refusing to package these paths:\n  " + "\n  ".join(map(str, bad)))

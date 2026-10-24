@@ -13,4 +13,4 @@
 | h5py | 3.16.0 |
 | pandas | 3.1.0 |
 | matplotlib | 3.11.2 |
-| BLAS libraries | openblas 0.3.15 Prescott (libopenblaso-r0-d77a1985.3.15.so); openblas 0.3.34.106.0 Haswell (libscipy_openblas64_-f48b354e.so); openblas 0.3.34.106.0 Haswell (libscipy_openblas64_-f48b354e.so); openblas 0.3.15 Prescott (libopenblaso-r0-d77a1985.3.15.so) |
+| BLAS libraries | openblas 0.3.15 Prescott (libopenblaso-r0-d77a1985.3.15.so); openblas 0.3.34.106.0 Haswell (libscipy_openblas64_-f48b354e.so) |

@@ -27,7 +27,8 @@ def make_repo(root, mode="full"):
     run("git", "remote", "add", "origin", "https://example.com/repo.git", cwd=root)
     (root / "ai_log").mkdir()
     (root / "ai_log" / "ai_statement.md").write_text("statement")
-    (root / "report.pdf").write_text("report")
+    (root / "report" / "report.pdf").parent.mkdir()
+    (root / "report" / "report.pdf").write_text("report")
     return root
 
 
@@ -42,6 +43,7 @@ def test_zip_holds_exactly_the_four_entries(tmp_path):
     names = zipfile.ZipFile(out).namelist()
     assert {name.split("/")[0] for name in names} == set(package.TOP_LEVEL)
     assert "code/.git/HEAD" in names and "code/run_all.sh" in names and "results/results.csv" in names
+    assert "report.pdf" in names and not any(name.startswith("code/report") for name in names)
 
 
 def test_clone_has_no_remote(tmp_path):

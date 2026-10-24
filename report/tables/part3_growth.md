@@ -1,4 +1,4 @@
-| Method | Latency slope | Distance slope | N grows | Latency grows | ms/query at 150K (fit) | GB at 150K | ms/query at 10M (fit) | GB at 10M |
+| Method | Slope: ms | Slope: dist. | N grows | ms grows | ms at 150K | GB at 150K | ms at 10M | GB at 10M |
 |---|---|---|---|---|---|---|---|---|
 | Exact search | 1.05 | 1.00 | 10x | 11.2x | 2.83 | 0.08 | 232.52 | 5.12 |
 | IVF-Flat | 0.66 | 0.62 | 10x | 4.6x | 0.11 | 0.08 | 1.84 | 5.22 |

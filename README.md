@@ -81,6 +81,15 @@ Every number in the report comes from a table generated from `results/results.cs
 | The CPU has 6 two-thread performance cores (CPUs 0–11) and 8 efficiency cores (CPUs 12–19) | `cat /sys/devices/cpu_core/cpus /sys/devices/cpu_atom/cpus` |
 | Each hypothesis was committed before its results | `git log --date=iso --format='%h %ad %s' -- hypothesis.md results/` |
 
+## Building the report
+Locally, with TeX Live (on Arch: `texlive-basic texlive-latex texlive-latexrecommended texlive-latexextra texlive-fontsrecommended texlive-binextra`):
+
+    cd report && latexmk -pdf report.tex      # or build report/report.tex with LaTeX Workshop in VS Code
+
+This writes `report/report.pdf`, which `scripts/package.py` puts at the top of the zip. On Overleaf instead (pdfLaTeX), this bundles `report.tex`, the tables and the figure PDFs into one zip to upload as a new project:
+
+    mkdir -p dist && python -c "import zipfile, pathlib as p; z = zipfile.ZipFile('dist/overleaf_report.zip', 'w'); z.write('report/report.tex', 'report.tex'); [z.write(f, 'tables/' + f.name) for f in sorted(p.Path('report/tables').glob('*.tex'))]; [z.write(f, 'figures/' + f.name) for f in sorted(p.Path('results/figures').glob('*.pdf'))]; z.close()"
+
 ## Repository layout
 | Path | Contents |
 |---|---|
@@ -90,6 +99,7 @@ Every number in the report comes from a table generated from `results/results.cs
 | `design_note.md` | Measurement choices, optimisations and findings, in the order they were made |
 | `results/` | `results.csv` and `figures/` from the full run |
 | `report/tables/` | Tables generated from `results.csv` |
+| `report/report.tex` | LaTeX source of the report; it includes the generated tables and figures |
 | `scripts/download_data.py` | Downloads and checks the two datasets |
 | `scripts/package.py` | Builds the submission zip: `python scripts/package.py --roll <ROLLNUMBER>` |
 | `tests/` | Tests for the packaging script |

@@ -22,3 +22,11 @@ __pycache__/
 .ipynb_checkpoints/
 .pytest_cache/
 PLAN.md
+
+# LaTeX build files from compiling report/report.tex (report.pdf itself is ignored above)
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
