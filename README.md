@@ -33,6 +33,7 @@ This downloads two files, about 1 GB together, into `data/`, which is not tracke
 - **Full mode** writes to `results/` and `report/tables/`, and saves the executed notebooks, outputs included, in place.
 - **Quick mode** writes everything to `results_quick/`, including the executed notebooks, so it never overwrites full results.
 - **For steady timings,** close the browser and other busy programs before a full run. The timing thread is pinned to one core, but other programs can still share that core (see `design_note.md`).
+- **On macOS,** quick mode runs, but the timing thread can't be pinned to a core, so its timings can be less steady. The machine record shows this: `timing_cpu` is empty and BLAS is Apple's Accelerate (see `design_note.md`).
 
 The stages are notebooks, run in a fixed order:
 
