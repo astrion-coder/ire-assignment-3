@@ -3,7 +3,7 @@
 | CPU | 13th Gen Intel(R) Core(TM) i5-13500 |
 | Logical CPUs | 20 |
 | RAM (GiB) | 15.3 |
-| OS | Linux-7.2.10-arch1-1-x86_64-with-glibc2.44 |
+| OS | Linux-7.2.11-arch1-1-x86_64-with-glibc2.44 |
 | Frequency governor | powersave |
 | Timing CPU (pinned) | 2 |
 | Build threads | 12 |

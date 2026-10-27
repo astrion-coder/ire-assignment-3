@@ -112,7 +112,7 @@ Every row of `results.csv` records these; `report/tables/machine.md` lists every
 |---|---|
 | CPU | 13th Gen Intel Core i5-13500 (6 performance cores with 2 threads each, 8 efficiency cores) |
 | RAM | 15.3 GiB |
-| OS | Arch Linux, kernel 7.2.10 |
+| OS | Arch Linux, kernel 7.2.11 (the full run of 27 October 2026) |
 | Python | 3.12.15 |
 | Libraries | faiss-cpu 1.15.1, numpy 2.5.4, h5py 3.16.0, pandas 3.1.0, matplotlib 3.11.2 (all pinned in `requirements.txt`) |
 | Timing | thread pinned to CPU 2 (a performance core); builds use 12 threads |
